@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Document</title>
     <link rel="stylesheet" href="https://wondaero.github.io/assets/css/normalize.css" />
     <style>
@@ -29,10 +29,15 @@
             color: #fff;
             padding: 3px 5px;
         }
+        .wrapper header > div{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+        }
         .wrapper ul{
             margin: 0;
             padding: 0;
-            padding: 10px;
             list-style: none;
             display: flex;
             align-items: center;
@@ -49,7 +54,7 @@
             color: #000;
         }
         .wrapper ul li select,
-        .wrapper ul li button{
+        .wrapper button{
             border-radius: 5px;
             padding: 5px 10px;
             background: #fff;
@@ -57,6 +62,23 @@
             border: 0;
             outline: 0;
             text-align: center;
+            cursor: pointer;
+            color: #000;
+        }
+        .color-label{
+            height: 30px;
+            width: 30px;
+            border-radius: 50%;
+            background: #000;
+            display: block;
+            cursor: pointer;
+        }
+        input[type="color"]{
+            border-radius: 50%;
+            height: 30px;
+            width: 30px;
+            border: 0;
+            opacity: 0;
         }
         .wrapper ul li select{
             -webkit-appearance: none;
@@ -80,25 +102,31 @@
     <div class="wrapper">
         <header>
             <h1>line draw</h1>
-            <ul>
-                <li><input type="color" id="penColor" /></li>
-                <li>
-                    <select id="penWidth">
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                        <option>4</option>
-                        <option>5</option>
-                        <option>6</option>
-                        <option>7</option>
-                        <option>8</option>
-                        <option>9</option>
-                        <option>10</option>
-                    </select>
-            </li>
-                <li><button id="delBtn">delete</button></li>
-                <li><button id="exportSvgBtn">export2svg</button></li>
-            </ul>
+            <div>
+                <ul>
+                    <li>
+                        <label class="color-label">
+                            <input type="color" id="penColor" />
+                        </label>
+                    </li>
+                    <li>
+                        <select id="penWidth">
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                            <option selected>5</option>
+                            <option>6</option>
+                            <option>7</option>
+                            <option>8</option>
+                            <option>9</option>
+                            <option>10</option>
+                        </select>
+                    </li>
+                    <!-- <li><button id="delBtn">delete</button></li> -->
+                </ul>
+                <button id="exportSvgBtn">export2svg</button>
+            </div>
         </header>
         <canvas></canvas>
         <footer>한번에, 하나의 라인만 그릴 수 있습니다.</footer>
@@ -106,7 +134,7 @@
 
     <script>
         const cv = document.querySelector('canvas');
-        const delBtn = document.querySelector('#delBtn');
+        // const delBtn = document.querySelector('#delBtn');
         const exportSvgBtn = document.querySelector('#exportSvgBtn');
         const penWidth = document.querySelector('#penWidth');
         const penColor = document.querySelector('#penColor');
@@ -242,6 +270,10 @@
 
         }
 
+
+        penColor.addEventListener('input', e => {
+            e.target.closest('label').style.background = e.target.value; 
+        })
         cv.addEventListener('mousedown', downEv);
         cv.addEventListener('mousemove', moveEv);
         cv.addEventListener('mouseup', upEv);
@@ -251,7 +283,7 @@
 
         cv.addEventListener('mouseout', upEv);
 
-        delBtn.addEventListener('click', delEv);
+        // delBtn.addEventListener('click', delEv);
 
         exportSvgBtn.addEventListener('click', exportSVG);
     </script>
