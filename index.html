@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://wondaero.github.io/assets/css/normalize.css" />
+    <style>
+        html, body{
+            height: 100%;
+            overflow: hidden;
+        }
+        .wrapper{
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wrapper header{
+            background: transparent;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, .3);
+            background: #eaeaea;
+        }
+        .wrapper header h1{
+            margin: 0;
+            padding: 0;
+            font-size: 15px;
+            background: darkslateblue;
+            color: #fff;
+            padding: 3px 5px;
+        }
+        .wrapper ul{
+            margin: 0;
+            padding: 0;
+            padding: 10px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrapper ul li{
+            margin-right: 10px;
+        }
+        .wrapper ul li:last-of-type{
+            margin: 0;
+        }
+        .wrapper ul li > *{
+            vertical-align: top;
+            color: #000;
+        }
+        .wrapper ul li select,
+        .wrapper ul li button{
+            border-radius: 5px;
+            padding: 5px 10px;
+            background: #fff;
+            box-shadow: 0 5px 5px rgba(255, 255, 255, .5);
+            border: 0;
+            outline: 0;
+            text-align: center;
+        }
+        .wrapper ul li select{
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .wrapper canvas{
+            flex: 1;
+            background: transparent;
+        }
+        .wrapper footer{
+            background: #808080;
+            padding: 5px 3px;
+            font-size: 12px;
+            text-align: center;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <h1>line draw</h1>
+            <ul>
+                <li><input type="color" id="penColor" /></li>
+                <li>
+                    <select id="penWidth">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                        <option>6</option>
+                        <option>7</option>
+                        <option>8</option>
+                        <option>9</option>
+                        <option>10</option>
+                    </select>
+            </li>
+                <li><button id="delBtn">delete</button></li>
+                <li><button id="exportSvgBtn">export2svg</button></li>
+            </ul>
+        </header>
+        <canvas></canvas>
+        <footer>한번에, 하나의 라인만 그릴 수 있습니다.</footer>
+    </div>
+
+    <script>
+        const cv = document.querySelector('canvas');
+        const delBtn = document.querySelector('#delBtn');
+        const exportSvgBtn = document.querySelector('#exportSvgBtn');
+        const penWidth = document.querySelector('#penWidth');
+        const penColor = document.querySelector('#penColor');
+        const ctx = cv.getContext('2d');
+
+        cv.width = cv.clientWidth;
+        cv.height = cv.clientHeight;
+        
+        window.addEventListener('resize', () => {
+            cv.width = cv.clientWidth;
+            cv.height = cv.clientHeight;
+        })
+
+        let startXY = [];
+        let ingXY = [];
+        let isEnd = false;
+
+        function eventXY(e){
+            if(e.type.indexOf('touch') > -1){
+                const rect = e.target.getClientRects()[0];
+                return {x: e.touches[0].clientX - rect.x, y: e.touches[0].clientY - rect.y}
+            }
+            
+            return {x: e.offsetX, y: e.offsetY};
+        }
+
+        function upEv(e){
+            isEnd = true;
+        }
+        function downEv(e){
+            delEv(true);
+            const xy = eventXY(e);
+            startXY.push([xy.x, xy.y]);
+            
+        }
+        function moveEv(e){
+            if(!startXY.length || isEnd) return;
+            
+            const xy = eventXY(e);
+            ingXY.push([xy.x, xy.y]);
+            ctx.clearRect(0, 0, cv.width, cv.height);
+
+            ctx.strokeStyle = penColor.value;
+            ctx.lineWidth = penWidth.value;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.beginPath();
+            
+            ctx.moveTo(startXY[0][0], startXY[0][1]);
+            for(let i = 0; i < ingXY.length; i++){
+                ctx.lineTo(ingXY[i][0], ingXY[i][1]);
+            }
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function outEv(e){
+            isEnd = true;
+        }
+
+        function delEv(bool){
+            if(bool !== true && !confirm('진짜 지운다?')) return;
+
+            ctx.clearRect(0, 0, cv.width, cv.height);
+            startXY = [];
+            ingXY = [];
+            isEnd = false;
+        }
+
+        function compressArr(arr, diffVal){
+            const compressedArr = [];
+
+
+            for (let i = 0; i < arr.length; i++) {
+                if(compressedArr.length === 0){
+                    compressedArr.push(arr[i]);
+                }else{
+                    // if(Math.abs(arr[i][0] - compressedArr[compressedArr.length - 1][0]) > diffVal
+                    // && Math.abs(arr[i][1] - compressedArr[compressedArr.length - 1][1]) > diffVal
+                    if(Math.abs(arr[i][0] - compressedArr[compressedArr.length - 1][0]) !== 0
+                    && Math.abs(arr[i][1] - compressedArr[compressedArr.length - 1][1]) !== 0
+                    ){
+                        compressedArr.push(arr[i]);
+                    }
+                }
+            }
+
+            return compressedArr;
+        }
+
+        function exportSVG(){
+            const mergeData = [...startXY, ...ingXY];
+
+            if(!mergeData.length){
+                alert('변환할 데이터가 없습니다.');
+                return;
+            }
+
+            const compressedData = compressArr(mergeData, 0);
+
+            const mnX = Math.min(...compressedData.map(el => el[0]));
+            const mxX = Math.max(...compressedData.map(el => el[0]));
+            const mnY = Math.min(...compressedData.map(el => el[1]));
+            const mxY = Math.max(...compressedData.map(el => el[1]));
+
+            const svgWidth = Math.abs(mxX - mnX) + (penWidth.value * 1);
+            const svgHeight = Math.abs(mxY - mnY) + (penWidth.value * 1);
+            
+
+            const parsedData = compressedData.map((el, idx) => `${idx === 0 ? 'M' : 'L'} ${el[0] - mnX + (+penWidth.value / 2)} ${el[1] - mnY + (+penWidth.value / 2)}`);
+
+            const svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="${parsedData.join(' ')}"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="${penWidth.value}"
+                    stroke="${penColor.value}"
+                    fill="none"
+                />
+            </svg>`;
+            
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'drawing.svg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+        }
+
+        cv.addEventListener('mousedown', downEv);
+        cv.addEventListener('mousemove', moveEv);
+        cv.addEventListener('mouseup', upEv);
+        cv.addEventListener('touchstart', downEv);
+        cv.addEventListener('touchmove', moveEv);
+        cv.addEventListener('touchend', upEv);
+
+        cv.addEventListener('mouseout', upEv);
+
+        delBtn.addEventListener('click', delEv);
+
+        exportSvgBtn.addEventListener('click', exportSVG);
+    </script>
+    
+</body>
+</html>
