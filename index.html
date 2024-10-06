@@ -157,7 +157,6 @@
         const uploadImgBtn = document.querySelector('#uploadImgBtn');
         const ctx = cv.getContext('2d');
 
-
         cv.width = cv.clientWidth;
         cv.height = cv.clientHeight;
         
@@ -166,7 +165,10 @@
             cv.height = cv.clientHeight;
         })
 
-        let startXY = [];
+        let startObj = {
+            type: '',
+            data: []
+        };
         let ingXY = [];
         let isEnd = false;
         let uploadedPath = '';
@@ -185,13 +187,26 @@
             isEnd = true;
         }
         function downEv(e){
+            
+            if(e.touches && e.touches.length > 1){
+                e.preventDefault();
+                return;
+            }
+            
             delEv(true);
             const xy = eventXY(e);
-            startXY.push([xy.x, xy.y]);
+            startObj.type = e.type.indexOf('touch') > -1 ? 'touch' : 'mouse';
+            startObj.data.push([xy.x, xy.y]);
+            e.preventDefault();
             
         }
         function moveEv(e){
-            if(!startXY.length || isEnd) return;
+            if(!startObj.data.length || isEnd || e.type.indexOf(startObj.type) < 0) return;
+
+            // if(event.touches.length > 1){
+            //     e.preventDefault();
+            //     return;
+            // }
             
             const xy = eventXY(e);
             ingXY.push([xy.x, xy.y]);
@@ -204,7 +219,7 @@
 
             ctx.beginPath();
             
-            ctx.moveTo(startXY[0][0], startXY[0][1]);
+            ctx.moveTo(startObj.data[0][0], startObj.data[0][1]);
             for(let i = 0; i < ingXY.length; i++){
                 ctx.lineTo(ingXY[i][0], ingXY[i][1]);
             }
@@ -220,7 +235,10 @@
             if(bool !== true && !confirm('진짜 지운다?')) return;
 
             ctx.clearRect(0, 0, cv.width, cv.height);
-            startXY = [];
+            startObj = {
+                type: '',
+                data: []
+            };
             ingXY = [];
             isEnd = false;
         }
@@ -247,7 +265,7 @@
         }
 
         function exportSVG(){
-            const mergeData = [...startXY, ...ingXY];
+            const mergeData = [...startObj.data, ...ingXY];
 
             if(!mergeData.length){
                 alert('변환할 데이터가 없습니다.');
